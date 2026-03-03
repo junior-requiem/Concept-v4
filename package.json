@@ -1,0 +1,11 @@
+{
+  "name": "concept-v4-lead-funnel",
+  "version": "1.0.0",
+  "description": "Public sector Oracle Fusion lead generation funnel with API ingestion and stack ranking.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "license": "MIT"
+}

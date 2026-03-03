@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Public Sector Oracle Fusion Lead Funnel</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Oracle Fusion Public Sector Lead Funnel</h1>
+      <p>Ingest API leads from GovWin and other sources. Auto-ranked from 1 (Not likely) to 5 (Strong lead).</p>
+    </header>
+
+    <main>
+      <section class="panel criteria-panel">
+        <h2>Ranking Criteria</h2>
+        <form id="criteria-form">
+          <label>
+            Target states (comma separated)
+            <input type="text" id="targetStates" name="targetStates" />
+          </label>
+          <label>
+            Minimum contract value
+            <input type="number" id="minContractValue" name="minContractValue" min="0" />
+          </label>
+          <label>
+            Oracle Fusion keywords (comma separated)
+            <input type="text" id="oracleFusionKeywords" name="oracleFusionKeywords" />
+          </label>
+          <label>
+            Target agencies (comma separated)
+            <input type="text" id="targetAgencies" name="targetAgencies" />
+          </label>
+          <button type="submit">Save criteria + Re-rank leads</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Lead Funnel</h2>
+        <div id="funnel" class="funnel"></div>
+      </section>
+
+      <section class="panel">
+        <div class="lead-header">
+          <h2 id="lead-title">Leads</h2>
+          <button id="reset-filter" type="button">Show all</button>
+        </div>
+        <div id="lead-list" class="lead-list"></div>
+      </section>
+    </main>
+
+    <template id="lead-template">
+      <article class="lead-card">
+        <div class="lead-top"></div>
+        <h3></h3>
+        <p class="lead-meta"></p>
+        <ul class="notes"></ul>
+      </article>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

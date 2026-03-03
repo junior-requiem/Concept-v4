@@ -8,12 +8,23 @@ const PORT = process.env.PORT || 3000;
 const criteria = {
   targetStates: ['VA', 'MD', 'DC', 'TX', 'CA'],
   minContractValue: 250000,
+  idealContractValue: 1000000,
   oracleFusionKeywords: ['oracle fusion', 'erp modernization', 'financials cloud'],
   targetAgencies: ['Department of Defense', 'GSA', 'HHS', 'VA', 'State Department'],
   sourceBoost: {
     GovWin: 20,
     SamGov: 10,
     GovTribe: 8,
+  },
+  mustHaveOracleFusionSignal: false,
+  urgencyWindowDays: 180,
+  weights: {
+    contractValue: 20,
+    geography: 18,
+    agency: 22,
+    oracleIntent: 25,
+    sourceQuality: 10,
+    timing: 5,
   },
 };
 
@@ -49,57 +60,118 @@ function parseBody(req) {
   });
 }
 
+function clamp(n, min = 0, max = 1) {
+  return Math.max(min, Math.min(max, n));
+}
+
 function scoreLead(rawLead) {
   const notes = [];
-  let score = 0;
+  const fits = {};
 
   const value = Number(rawLead.contractValue || 0);
-  if (value >= criteria.minContractValue) {
-    score += 20;
-    notes.push(`Contract value $${value.toLocaleString()} meets min value.`);
+  const minimum = Number(criteria.minContractValue || 0);
+  const ideal = Math.max(Number(criteria.idealContractValue || minimum), minimum || 1);
+  if (value >= minimum) {
+    const idealProgress = clamp((value - minimum) / Math.max(ideal - minimum, 1));
+    fits.contractValue = clamp(0.7 + idealProgress * 0.3);
+    notes.push(`Contract value $${value.toLocaleString()} meets minimum and aligns with target deal size.`);
   } else {
-    notes.push(`Contract value $${value.toLocaleString()} is below minimum.`);
+    fits.contractValue = clamp(value / Math.max(minimum, 1)) * 0.6;
+    notes.push(`Contract value $${value.toLocaleString()} is below minimum threshold.`);
   }
 
   const state = String(rawLead.state || '').toUpperCase();
-  if (criteria.targetStates.includes(state)) {
-    score += 20;
-    notes.push(`State ${state} matches target geography.`);
-  } else {
-    notes.push(`State ${state || 'N/A'} is outside target geography.`);
-  }
+  fits.geography = criteria.targetStates.includes(state) ? 1 : 0;
+  notes.push(
+    fits.geography
+      ? `State ${state} is in target geography.`
+      : `State ${state || 'N/A'} is outside target geography.`,
+  );
 
   const agency = String(rawLead.agency || '');
-  if (criteria.targetAgencies.some((a) => agency.toLowerCase().includes(a.toLowerCase()))) {
-    score += 20;
-    notes.push(`Agency ${agency} matches target agency list.`);
-  } else {
-    notes.push(`Agency ${agency || 'N/A'} not in target agency list.`);
-  }
+  const agencyMatch = criteria.targetAgencies.find((a) => agency.toLowerCase().includes(a.toLowerCase()));
+  fits.agency = agencyMatch ? 1 : 0;
+  notes.push(
+    fits.agency
+      ? `Agency fit confirmed via target match: ${agencyMatch}.`
+      : `Agency ${agency || 'N/A'} does not match target agency list.`,
+  );
 
   const textBlob = `${rawLead.title || ''} ${rawLead.description || ''}`.toLowerCase();
   const keywordHits = criteria.oracleFusionKeywords.filter((keyword) => textBlob.includes(keyword.toLowerCase()));
-  if (keywordHits.length > 0) {
-    score += 25;
-    notes.push(`Matched Oracle Fusion intent via: ${keywordHits.join(', ')}.`);
-  } else {
-    notes.push('No Oracle Fusion keywords matched.');
-  }
+  fits.oracleIntent = clamp(keywordHits.length / Math.max(criteria.oracleFusionKeywords.length, 1));
+  notes.push(
+    keywordHits.length > 0
+      ? `Oracle Fusion intent detected through keywords: ${keywordHits.join(', ')}.`
+      : 'No Oracle Fusion intent signal detected in title/description.',
+  );
 
   const source = String(rawLead.source || 'Unknown');
-  const boost = criteria.sourceBoost[source] || 0;
-  score += boost;
-  if (boost > 0) {
-    notes.push(`Source boost applied for ${source}: +${boost}.`);
+  const boost = Number(criteria.sourceBoost[source] || 0);
+  const maxBoost = Math.max(...Object.values(criteria.sourceBoost).map((n) => Number(n || 0)), 1);
+  fits.sourceQuality = clamp(boost / maxBoost);
+  notes.push(
+    boost > 0
+      ? `Source quality boost applied for ${source}: +${boost}.`
+      : `No configured source boost for ${source}; treated as lower confidence source.`,
+  );
+
+  let timingFit = 0.5;
+  if (rawLead.dueDate) {
+    const due = new Date(rawLead.dueDate);
+    const daysUntilDue = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (!Number.isNaN(daysUntilDue) && daysUntilDue >= 0) {
+      timingFit = clamp(1 - daysUntilDue / Math.max(criteria.urgencyWindowDays, 1), 0.25, 1);
+      notes.push(`Due date urgency fit is ${Math.round(timingFit * 100)}% (${daysUntilDue} day(s) out).`);
+    } else {
+      timingFit = 0.2;
+      notes.push('Due date appears expired or invalid, reducing timing fit.');
+    }
   } else {
-    notes.push(`No source boost configured for ${source}.`);
+    notes.push('Due date missing; timing fit set to neutral.');
+  }
+  fits.timing = timingFit;
+
+  const weights = criteria.weights;
+  const weightedTotal =
+    fits.contractValue * weights.contractValue
+    + fits.geography * weights.geography
+    + fits.agency * weights.agency
+    + fits.oracleIntent * weights.oracleIntent
+    + fits.sourceQuality * weights.sourceQuality
+    + fits.timing * weights.timing;
+  const maxPossible = Object.values(weights).reduce((acc, n) => acc + Number(n || 0), 0) || 1;
+
+  let score = Math.round((weightedTotal / maxPossible) * 100);
+
+  if (criteria.mustHaveOracleFusionSignal && fits.oracleIntent === 0) {
+    score = Math.min(score, 35);
+    notes.push('Lead blocked from high ranking: Oracle Fusion signal is required by policy.');
   }
 
-  score = Math.max(0, Math.min(score, 100));
+  const populatedFields = [rawLead.title, rawLead.agency, rawLead.state, rawLead.contractValue, rawLead.description, rawLead.dueDate]
+    .filter((v) => v !== undefined && v !== null && String(v).trim() !== '').length;
+  const completeness = populatedFields / 6;
+  const confidenceScore = clamp((completeness * 0.6) + ((fits.oracleIntent + fits.agency + fits.geography) / 3) * 0.4);
+  const confidence = confidenceScore >= 0.75 ? 'High' : confidenceScore >= 0.45 ? 'Medium' : 'Low';
 
   const rank = score >= 85 ? 5 : score >= 70 ? 4 : score >= 50 ? 3 : score >= 30 ? 2 : 1;
 
-  return { score, rank, notes };
+  return {
+    score,
+    rank,
+    confidence,
+    confidenceScore: Math.round(confidenceScore * 100),
+    fitBreakdown: {
+      contractValue: Math.round(fits.contractValue * 100),
+      geography: Math.round(fits.geography * 100),
+      agency: Math.round(fits.agency * 100),
+      oracleIntent: Math.round(fits.oracleIntent * 100),
+      sourceQuality: Math.round(fits.sourceQuality * 100),
+      timing: Math.round(fits.timing * 100),
+    },
+    notes,
+  };
 }
 
 function normalizeLead(input) {
@@ -115,9 +187,24 @@ function normalizeLead(input) {
     description: input.description || '',
     score: scored.score,
     rank: scored.rank,
+    confidence: scored.confidence,
+    confidenceScore: scored.confidenceScore,
+    fitBreakdown: scored.fitBreakdown,
     notes: scored.notes,
     createdAt: new Date().toISOString(),
   };
+}
+
+function rescoreAllLeads() {
+  for (let i = 0; i < leads.length; i += 1) {
+    const rescored = scoreLead(leads[i]);
+    leads[i].score = rescored.score;
+    leads[i].rank = rescored.rank;
+    leads[i].confidence = rescored.confidence;
+    leads[i].confidenceScore = rescored.confidenceScore;
+    leads[i].fitBreakdown = rescored.fitBreakdown;
+    leads[i].notes = rescored.notes;
+  }
 }
 
 function serveStatic(req, res, pathname) {
@@ -196,16 +283,20 @@ const server = http.createServer(async (req, res) => {
       const body = await parseBody(req);
       if (Array.isArray(body.targetStates)) criteria.targetStates = body.targetStates.map((s) => String(s).toUpperCase());
       if (typeof body.minContractValue === 'number') criteria.minContractValue = body.minContractValue;
+      if (typeof body.idealContractValue === 'number') criteria.idealContractValue = body.idealContractValue;
       if (Array.isArray(body.oracleFusionKeywords)) criteria.oracleFusionKeywords = body.oracleFusionKeywords;
       if (Array.isArray(body.targetAgencies)) criteria.targetAgencies = body.targetAgencies;
       if (body.sourceBoost && typeof body.sourceBoost === 'object') criteria.sourceBoost = body.sourceBoost;
-
-      for (let i = 0; i < leads.length; i += 1) {
-        const rescored = scoreLead(leads[i]);
-        leads[i].score = rescored.score;
-        leads[i].rank = rescored.rank;
-        leads[i].notes = rescored.notes;
+      if (typeof body.mustHaveOracleFusionSignal === 'boolean') criteria.mustHaveOracleFusionSignal = body.mustHaveOracleFusionSignal;
+      if (typeof body.urgencyWindowDays === 'number') criteria.urgencyWindowDays = body.urgencyWindowDays;
+      if (body.weights && typeof body.weights === 'object') {
+        criteria.weights = {
+          ...criteria.weights,
+          ...body.weights,
+        };
       }
+
+      rescoreAllLeads();
 
       json(res, 200, { ok: true, criteria });
     } catch (error) {
@@ -230,9 +321,11 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/leads' && req.method === 'GET') {
     const rankFilter = Number(searchParams.get('rank') || 0);
     const sourceFilter = searchParams.get('source');
+    const confidenceFilter = searchParams.get('confidence');
     const filtered = leads
       .filter((lead) => (rankFilter ? lead.rank === rankFilter : true))
       .filter((lead) => (sourceFilter ? lead.source.toLowerCase() === sourceFilter.toLowerCase() : true))
+      .filter((lead) => (confidenceFilter ? lead.confidence.toLowerCase() === confidenceFilter.toLowerCase() : true))
       .sort((a, b) => b.score - a.score || new Date(b.createdAt) - new Date(a.createdAt));
 
     json(res, 200, { total: filtered.length, leads: filtered });

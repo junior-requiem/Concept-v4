@@ -7,6 +7,14 @@ const criteriaForm = document.querySelector('#criteria-form');
 
 let selectedRank = null;
 
+const rankLabels = {
+  1: 'Not likely',
+  2: 'Monitor',
+  3: 'Qualified',
+  4: 'High potential',
+  5: 'Strong lead',
+};
+
 async function fetchJSON(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
@@ -28,6 +36,8 @@ async function loadCriteria() {
   const criteria = await fetchJSON('/api/criteria');
   criteriaForm.targetStates.value = toCSV(criteria.targetStates);
   criteriaForm.minContractValue.value = criteria.minContractValue;
+  criteriaForm.idealContractValue.value = criteria.idealContractValue || "";
+  criteriaForm.mustHaveOracleFusionSignal.checked = Boolean(criteria.mustHaveOracleFusionSignal);
   criteriaForm.oracleFusionKeywords.value = toCSV(criteria.oracleFusionKeywords);
   criteriaForm.targetAgencies.value = toCSV(criteria.targetAgencies);
 }
@@ -41,9 +51,10 @@ function renderLeads(leads) {
 
   leads.forEach((lead) => {
     const fragment = leadTemplate.content.cloneNode(true);
-    fragment.querySelector('.lead-top').textContent = `${lead.source} • Rank ${lead.rank} • Score ${lead.score}`;
+    fragment.querySelector('.lead-top').textContent = `${lead.source} • Rank ${lead.rank} • Score ${lead.score} • Confidence ${lead.confidence || 'N/A'} (${lead.confidenceScore || 0}%)`; 
     fragment.querySelector('h3').textContent = lead.title;
-    fragment.querySelector('.lead-meta').textContent = `${lead.agency} | ${lead.state} | $${lead.contractValue.toLocaleString()} | Due ${lead.dueDate || 'TBD'}`;
+    const fit = lead.fitBreakdown || {};
+    fragment.querySelector('.lead-meta').textContent = `${lead.agency} | ${lead.state} | $${lead.contractValue.toLocaleString()} | Due ${lead.dueDate || 'TBD'} | Intent ${fit.oracleIntent || 0}% | Agency ${fit.agency || 0}%`; 
 
     const notesNode = fragment.querySelector('.notes');
     lead.notes.forEach((note) => {
@@ -59,7 +70,7 @@ function renderLeads(leads) {
 async function loadLeads() {
   const query = selectedRank ? `?rank=${selectedRank}` : '';
   const data = await fetchJSON(`/api/leads${query}`);
-  leadTitle.textContent = selectedRank ? `Leads in Rank ${selectedRank}` : 'All Leads';
+  leadTitle.textContent = selectedRank ? `Rank ${selectedRank} • ${rankLabels[selectedRank]}` : 'All Leads';
   renderLeads(data.leads);
 }
 
@@ -75,7 +86,8 @@ async function loadFunnel() {
       tierNode.className = 'funnel-tier';
       if (selectedRank === tier.rank) tierNode.classList.add('active');
       tierNode.innerHTML = `
-        <strong>Rank ${tier.rank} - ${tier.label}</strong><br />
+        <span class="rank-chip">Rank ${tier.rank}</span><br />
+        <strong>${tier.label || rankLabels[tier.rank]}</strong><br />
         ${tier.count} lead(s)
         ${tier.topLead ? `<br /><small>Top: ${tier.topLead.title} (${tier.topLead.source})</small>` : ''}
       `;
@@ -93,8 +105,10 @@ criteriaForm.addEventListener('submit', async (event) => {
   const payload = {
     targetStates: fromCSV(criteriaForm.targetStates.value).map((s) => s.toUpperCase()),
     minContractValue: Number(criteriaForm.minContractValue.value),
+    idealContractValue: Number(criteriaForm.idealContractValue.value),
     oracleFusionKeywords: fromCSV(criteriaForm.oracleFusionKeywords.value),
     targetAgencies: fromCSV(criteriaForm.targetAgencies.value),
+    mustHaveOracleFusionSignal: criteriaForm.mustHaveOracleFusionSignal.checked,
   };
   await fetchJSON('/api/criteria', {
     method: 'PUT',

@@ -40,6 +40,20 @@ npm start
 
 Open: `http://localhost:3000`
 
+## GitHub Pages deployment
+
+This repo now includes a GitHub Actions workflow that publishes the `public/` folder to GitHub Pages.
+
+- Workflow file: `.github/workflows/deploy-pages.yml`
+- Trigger: pushes to `main` (or manual `workflow_dispatch`)
+- Publish source: uploaded Pages artifact from `public/`
+
+### Important behavior on GitHub Pages
+
+GitHub Pages only serves static files, so the Node API (`/api/*`) is not available there.
+The front-end automatically falls back to a client-side demo data mode when API requests fail,
+so the funnel UI remains usable when hosted on Pages.
+
 ## API
 
 ### Add leads

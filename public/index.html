@@ -22,47 +22,49 @@
       </header>
 
       <main class="layout-grid">
-        <section class="panel glass criteria-panel">
-          <div class="panel-title-wrap">
-            <h2>Ranking Criteria</h2>
-            <p>Adjust fit signals and instantly re-score your funnel.</p>
-          </div>
-          <form id="criteria-form">
-            <label>
-              Target states
-              <input type="text" id="targetStates" name="targetStates" placeholder="VA, MD, DC" />
-            </label>
-            <label>
-              Minimum contract value
-              <input type="number" id="minContractValue" name="minContractValue" min="0" placeholder="250000" />
-            </label>
-            <label>
-              Ideal contract value
-              <input type="number" id="idealContractValue" name="idealContractValue" min="0" placeholder="1000000" />
-            </label>
-            <label>
-              Oracle Fusion keywords
-              <input type="text" id="oracleFusionKeywords" name="oracleFusionKeywords" placeholder="oracle fusion, erp modernization" />
-            </label>
-            <label>
-              Target agencies
-              <input type="text" id="targetAgencies" name="targetAgencies" placeholder="DoD, HHS, GSA" />
-            </label>
-            <label class="inline-toggle">
-              <input type="checkbox" id="mustHaveOracleFusionSignal" name="mustHaveOracleFusionSignal" />
-              Require Oracle Fusion signal for high ranks
-            </label>
-            <button type="submit">Save Criteria & Re-rank</button>
-          </form>
-        </section>
+        <div class="left-rail">
+          <section class="panel glass criteria-panel">
+            <div class="panel-title-wrap">
+              <h2>Ranking Criteria</h2>
+              <p>Adjust fit signals and instantly re-score your funnel.</p>
+            </div>
+            <form id="criteria-form">
+              <label>
+                Target states
+                <input type="text" id="targetStates" name="targetStates" placeholder="VA, MD, DC" />
+              </label>
+              <label>
+                Minimum contract value
+                <input type="number" id="minContractValue" name="minContractValue" min="0" placeholder="250000" />
+              </label>
+              <label>
+                Ideal contract value
+                <input type="number" id="idealContractValue" name="idealContractValue" min="0" placeholder="1000000" />
+              </label>
+              <label>
+                Oracle Fusion keywords
+                <input type="text" id="oracleFusionKeywords" name="oracleFusionKeywords" placeholder="oracle fusion, erp modernization" />
+              </label>
+              <label>
+                Target agencies
+                <input type="text" id="targetAgencies" name="targetAgencies" placeholder="DoD, HHS, GSA" />
+              </label>
+              <label class="inline-toggle">
+                <input type="checkbox" id="mustHaveOracleFusionSignal" name="mustHaveOracleFusionSignal" />
+                Require Oracle Fusion signal for high ranks
+              </label>
+              <button type="submit">Save Criteria & Re-rank</button>
+            </form>
+          </section>
 
-        <section class="panel glass funnel-panel">
-          <div class="panel-title-wrap">
-            <h2>Lead Funnel</h2>
-            <p>Tap any rank to isolate opportunities in that band.</p>
-          </div>
-          <div id="funnel" class="funnel"></div>
-        </section>
+          <section class="panel glass funnel-panel">
+            <div class="panel-title-wrap">
+              <h2>Lead Funnel</h2>
+              <p>Tap any rank to isolate opportunities in that band.</p>
+            </div>
+            <div id="funnel" class="funnel"></div>
+          </section>
+        </div>
 
         <section class="panel glass leads-panel">
           <div class="lead-header">

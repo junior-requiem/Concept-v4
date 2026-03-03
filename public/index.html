@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oracle Fusion Public Sector Lead Intelligence</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div class="app-shell">
+      <header class="hero glass">
+        <p class="eyebrow">Lead Intelligence Platform</p>
+        <h1>Oracle Fusion Public Sector Funnel</h1>
+        <p class="hero-copy">
+          Ingest opportunities from GovWin and other lead sources, auto-rank every lead from 1 to 5,
+          and focus your team on the strongest Oracle Fusion pursuits.
+        </p>
+      </header>
+
+      <main class="layout-grid">
+        <section class="panel glass criteria-panel">
+          <div class="panel-title-wrap">
+            <h2>Ranking Criteria</h2>
+            <p>Adjust fit signals and instantly re-score your funnel.</p>
+          </div>
+          <form id="criteria-form">
+            <label>
+              Target states
+              <input type="text" id="targetStates" name="targetStates" placeholder="VA, MD, DC" />
+            </label>
+            <label>
+              Minimum contract value
+              <input type="number" id="minContractValue" name="minContractValue" min="0" placeholder="250000" />
+            </label>
+            <label>
+              Ideal contract value
+              <input type="number" id="idealContractValue" name="idealContractValue" min="0" placeholder="1000000" />
+            </label>
+            <label>
+              Oracle Fusion keywords
+              <input type="text" id="oracleFusionKeywords" name="oracleFusionKeywords" placeholder="oracle fusion, erp modernization" />
+            </label>
+            <label>
+              Target agencies
+              <input type="text" id="targetAgencies" name="targetAgencies" placeholder="DoD, HHS, GSA" />
+            </label>
+            <label class="inline-toggle">
+              <input type="checkbox" id="mustHaveOracleFusionSignal" name="mustHaveOracleFusionSignal" />
+              Require Oracle Fusion signal for high ranks
+            </label>
+            <button type="submit">Save Criteria & Re-rank</button>
+          </form>
+        </section>
+
+        <section class="panel glass funnel-panel">
+          <div class="panel-title-wrap">
+            <h2>Lead Funnel</h2>
+            <p>Tap any rank to isolate opportunities in that band.</p>
+          </div>
+          <div id="funnel" class="funnel"></div>
+        </section>
+
+        <section class="panel glass leads-panel">
+          <div class="lead-header">
+            <div>
+              <h2 id="lead-title">All Leads</h2>
+              <p>Explainable scoring with source and fit notes.</p>
+            </div>
+            <button id="reset-filter" type="button" class="ghost-button">Show all</button>
+          </div>
+          <div id="lead-list" class="lead-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="lead-template">
+      <article class="lead-card">
+        <div class="lead-top"></div>
+        <h3></h3>
+        <p class="lead-meta"></p>
+        <ul class="notes"></ul>
+      </article>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

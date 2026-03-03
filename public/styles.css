@@ -27,9 +27,9 @@ body {
 .app-shell {
   position: relative;
   z-index: 1;
-  max-width: 1280px;
+  max-width: 1540px;
   margin: 0 auto;
-  padding: 2.25rem 1.4rem 2rem;
+  padding: 2.5rem 2rem 2.2rem;
 }
 
 .bg-orb {
@@ -72,8 +72,8 @@ body {
 
 .hero {
   border-radius: 22px;
-  padding: 1.5rem 1.6rem;
-  margin-bottom: 1rem;
+  padding: 1.8rem 2.2rem;
+  margin-bottom: 1.5rem;
 }
 
 .eyebrow {
@@ -104,13 +104,20 @@ h1 {
 
 .layout-grid {
   display: grid;
-  grid-template-columns: minmax(310px, 360px) minmax(280px, 330px) minmax(320px, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(320px, 360px) minmax(760px, 1fr);
+  justify-content: center;
+  align-items: start;
+  gap: 2rem;
+}
+
+.left-rail {
+  display: grid;
+  gap: 1.2rem;
 }
 
 .panel {
   border-radius: 18px;
-  padding: 1rem;
+  padding: 1.3rem;
 }
 
 .panel-title-wrap {
@@ -126,7 +133,7 @@ h1 {
 
 .criteria-panel form {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.8rem;
 }
 
 label {
@@ -141,7 +148,7 @@ input,
 button {
   font: inherit;
   border-radius: 12px;
-  padding: 0.62rem 0.72rem;
+  padding: 0.7rem 0.8rem;
 }
 
 input {
@@ -186,7 +193,7 @@ button {
 }
 .funnel {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.75rem;
 }
 
 .funnel-tier {
@@ -195,7 +202,7 @@ button {
   border-radius: 14px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(225, 242, 255, 0.9));
   color: var(--text-strong);
-  padding: 0.7rem;
+  padding: 0.9rem;
 }
 
 .funnel-tier.active {
@@ -217,18 +224,19 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.8rem;
 }
 
 .lead-list {
   display: grid;
-  gap: 0.7rem;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .lead-card {
   border: 1px solid rgba(17, 105, 190, 0.2);
   border-radius: 14px;
-  padding: 0.82rem;
+  padding: 1.05rem;
   background: rgba(255, 255, 255, 0.76);
 }
 
@@ -239,8 +247,8 @@ button {
 }
 
 h3 {
-  margin-top: 0.3rem;
-  font-size: 1rem;
+  margin-top: 0.34rem;
+  font-size: 1.08rem;
 }
 
 .lead-meta {
@@ -250,10 +258,10 @@ h3 {
 }
 
 .notes {
-  margin: 0.52rem 0 0;
+  margin: 0.7rem 0 0;
   padding-left: 1rem;
   color: #2a4d72;
-  font-size: 0.81rem;
+  font-size: 0.85rem;
 }
 
 .empty {
@@ -263,6 +271,19 @@ h3 {
 
 @media (max-width: 1080px) {
   .layout-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .left-rail {
+    order: 2;
+  }
+
+  .leads-panel {
+    order: 1;
+  }
+
+  .lead-list {
     grid-template-columns: 1fr;
   }
 }

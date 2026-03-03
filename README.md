@@ -40,13 +40,17 @@ npm start
 
 Open: `http://localhost:3000`
 
-## GitHub Pages deployment
+## GitHub Pages deployment (main branch)
 
-This repo now includes a GitHub Actions workflow that publishes the `public/` folder to GitHub Pages.
+This repository supports deploying directly from the `main` branch with GitHub Pages.
 
-- Workflow file: `.github/workflows/deploy-pages.yml`
-- Trigger: pushes to `main` (or manual `workflow_dispatch`)
-- Publish source: uploaded Pages artifact from `public/`
+1. Go to **Settings → Pages**.
+2. Set **Source** to **Deploy from a branch**.
+3. Choose **Branch: `main`** and **Folder: `/(root)`**.
+4. Save, then open your site at:
+   - `https://<username>.github.io/<repo>/`
+
+An `index.html` redirect is provided at the repo root so the site entry URL forwards to `public/` automatically.
 
 ### Important behavior on GitHub Pages
 

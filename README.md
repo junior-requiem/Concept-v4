@@ -40,6 +40,24 @@ npm start
 
 Open: `http://localhost:3000`
 
+## GitHub Pages deployment (main branch)
+
+This repository supports deploying directly from the `main` branch with GitHub Pages.
+
+1. Go to **Settings → Pages**.
+2. Set **Source** to **Deploy from a branch**.
+3. Choose **Branch: `main`** and **Folder: `/(root)`**.
+4. Save, then open your site at:
+   - `https://<username>.github.io/<repo>/`
+
+An `index.html` redirect is provided at the repo root so the site entry URL forwards to `public/` automatically.
+
+### Important behavior on GitHub Pages
+
+GitHub Pages only serves static files, so the Node API (`/api/*`) is not available there.
+The front-end automatically falls back to a client-side demo data mode when API requests fail,
+so the funnel UI remains usable when hosted on Pages.
+
 ## API
 
 ### Add leads
